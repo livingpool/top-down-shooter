@@ -15,6 +15,7 @@ type ServerUpdate struct {
 }
 
 type ClientUpdate struct {
+	PlayerId  string   `json:"player_id"`
 	Type      string   `json:"type"`
 	Keys      KeyPress `json:"keys"`
 	TimeStamp int      `json:"timestamp"`

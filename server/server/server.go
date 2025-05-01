@@ -4,17 +4,20 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/livingpool/top-down-shooter/game/game"
 	"github.com/livingpool/top-down-shooter/server/model"
 )
 
 // GameServer maintains the set of active players and rooms
 // and broadcasts game states at fixed intervals.
 type GameServer struct {
-	subscribers map[string]*model.Subscriber // registered clients
-	rooms       map[string]*model.Room       // created rooms
-	register    chan *model.Subscriber       // register requests from clients
-	unregister  chan *model.Subscriber       // unregister requests from clients
-	serveMux    *http.ServeMux               // serveMux routes endpoints to appropriate handlers
+	games       map[string]*game.Game           // active games (id -> game)
+	inputs      map[string][]model.ClientUpdate // queue of client updates (game id -> inputs)
+	rooms       map[string]*model.Room          // active rooms (id -> room)
+	subscribers map[string]*model.Subscriber    // registered clients (id -> client)
+	register    chan *model.Subscriber          // register requests from clients
+	unregister  chan *model.Subscriber          // unregister requests from clients
+	serveMux    *http.ServeMux                  // serveMux routes endpoints to appropriate handlers
 	mutex       *sync.RWMutex
 }
 
@@ -25,8 +28,9 @@ func NewGameServer() *GameServer {
 	serveMux.HandleFunc("/health", serveHealth)
 
 	return &GameServer{
-		subscribers: make(map[string]*model.Subscriber),
+		games:       make(map[string]*game.Game),
 		rooms:       make(map[string]*model.Room),
+		subscribers: make(map[string]*model.Subscriber),
 		register:    make(chan *model.Subscriber),
 		unregister:  make(chan *model.Subscriber),
 		serveMux:    serveMux,
