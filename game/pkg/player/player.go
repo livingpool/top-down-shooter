@@ -18,13 +18,14 @@ const (
 )
 
 type Player struct {
-	object        util.GameObject
-	lastDelta     util.Vector // render rotation at the last frame to keep the facing position correctly
-	state         util.HumanoidState
-	health        int
+	Object        util.GameObject
+	LastDelta     util.Vector // render rotation at the last frame to keep the facing position correctly
+	HumanoidState util.HumanoidState
+	Health        int
 	Bullets       []*bullet.Bullet
-	shootCoolDown *util.Timer
-	ammo          int
+	ShootCoolDown *util.Timer
+	Ammo          int
+	Inputs        []Input // local history of inputs
 }
 
 func NewPlayer(screenWidth, screenHeight float64) *Player {
@@ -36,16 +37,16 @@ func NewPlayer(screenWidth, screenHeight float64) *Player {
 	}
 
 	return &Player{
-		object: util.GameObject{
+		Object: util.GameObject{
 			Vector:   pos,
 			Rotation: -util.FacingOffset,
 			Sprite:   sprite,
 		},
-		lastDelta:     pos,
-		state:         util.HumanoidStateStand,
+		LastDelta:     pos,
+		HumanoidState: util.HumanoidStateStand,
 		Bullets:       make([]*bullet.Bullet, 0),
-		shootCoolDown: util.NewTimer(shootCoolDown),
-		ammo:          0,
+		ShootCoolDown: util.NewTimer(shootCoolDown),
+		Ammo:          0,
 	}
 }
 
@@ -75,13 +76,13 @@ func (p *Player) Update() {
 		delta.Y *= factor
 	}
 
-	p.object.Vector.X += delta.X
-	p.object.Vector.Y += delta.Y
+	p.Object.Vector.X += delta.X
+	p.Object.Vector.Y += delta.Y
 
 	// update rotation
 	if delta.X != 0 || delta.Y != 0 {
-		p.object.Rotation = math.Atan2(p.lastDelta.Y, p.lastDelta.X)
-		p.lastDelta = delta
+		p.Object.Rotation = math.Atan2(p.LastDelta.Y, p.LastDelta.X)
+		p.LastDelta = delta
 	}
 
 	// update existing bullets
@@ -90,22 +91,22 @@ func (p *Player) Update() {
 	}
 
 	// shoot at specified intervals
-	p.shootCoolDown.Update()
-	if p.shootCoolDown.IsReady() && ebiten.IsKeyPressed(ebiten.KeySpace) {
-		p.shootCoolDown.Reset()
+	p.ShootCoolDown.Update()
+	if p.ShootCoolDown.IsReady() && ebiten.IsKeyPressed(ebiten.KeySpace) {
+		p.ShootCoolDown.Reset()
 
-		spawnPos := p.object.CalcBulletSpawnPosition()
+		spawnPos := p.Object.CalcBulletSpawnPosition()
 
-		bullet := bullet.NewBullet(spawnPos, p.object.Rotation+util.FacingOffset)
+		bullet := bullet.NewBullet(spawnPos, p.Object.Rotation+util.FacingOffset)
 		p.Bullets = append(p.Bullets, bullet)
 	}
 }
 
 func (p *Player) Draw(screen *ebiten.Image, debugMode bool) {
 	// draw player
-	op := p.object.CenterAndRotateImage()
-	op.GeoM.Translate(p.object.Vector.X, p.object.Vector.Y)
-	screen.DrawImage(p.object.Sprite, op)
+	op := p.Object.CenterAndRotateImage()
+	op.GeoM.Translate(p.Object.Vector.X, p.Object.Vector.Y)
+	screen.DrawImage(p.Object.Sprite, op)
 
 	// draw bullets
 	for _, bullet := range p.Bullets {
@@ -113,17 +114,23 @@ func (p *Player) Draw(screen *ebiten.Image, debugMode bool) {
 	}
 
 	if debugMode {
-		p.object.Vector.DrawDebugCircle(screen, 32)
+		p.Object.Vector.DrawDebugCircle(screen, 32)
 	}
 }
 
 func (p *Player) Collider() util.Rect {
-	bounds := p.object.Sprite.Bounds()
+	bounds := p.Object.Sprite.Bounds()
 
 	return util.NewRect(
-		p.object.Vector.X,
-		p.object.Vector.Y,
+		p.Object.Vector.X,
+		p.Object.Vector.Y,
 		float64(bounds.Dx()),
 		float64(bounds.Dy()),
 	)
+}
+
+type Input struct {
+	Seq       int
+	TimeStamp int
+	Inputs    []rune
 }

@@ -6,8 +6,13 @@ import (
 	"github.com/livingpool/top-down-shooter/game/util"
 )
 
+// The main game class. This gets created on both server and client.
+// Server creates one game instance for each game that is hosted,
+// and client creates one for itself to play the game.
+// TODO: set boundaries
 type Game struct {
 	DebugMode bool
+	IsServer  bool // store a flag to determine if this instance is a server or client
 	Players   []*player.Player
 }
 

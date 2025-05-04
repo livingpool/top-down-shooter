@@ -5,6 +5,7 @@ import (
 	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
@@ -37,6 +38,13 @@ func (obj *GameObject) CalcBulletSpawnPosition() Vector {
 		Y: obj.Vector.Y + math.Sin(spawnRotation)*BulletSpawnOffset,
 	}
 	return spawnPos
+}
+
+func (obj *GameObject) DrawDebugCircle(radius float32, debugText string) {
+	obj.Vector.DrawDebugCircle(obj.Sprite, radius)
+	if debugText != "" {
+		ebitenutil.DebugPrint(obj.Sprite, debugText)
+	}
 }
 
 type Vector struct {

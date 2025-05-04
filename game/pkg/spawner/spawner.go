@@ -69,19 +69,31 @@ func randPosition(screenWidth, screenHeight float64, target util.Vector) util.Ve
 func randVelocity()
 
 type Zombie struct {
-	position util.Vector
-	rotation float64
-	sprite   *ebiten.Image
+	object util.GameObject
 }
 
 func NewZombie() *Zombie {
 	sprite := assets.Zombie1HoldSprite
 
 	return &Zombie{
-		position: util.Vector{},
-		sprite:   sprite,
+		object: util.GameObject{
+			Vector:   util.Vector{},
+			Rotation: -util.FacingOffset,
+			Sprite:   sprite,
+		},
 	}
 }
 
 func (z *Zombie) Update() {
+}
+
+func (z *Zombie) Collider() util.Rect {
+	bounds := z.object.Sprite.Bounds()
+
+	return util.NewRect(
+		z.object.Vector.X,
+		z.object.Vector.Y,
+		float64(bounds.Dx()),
+		float64(bounds.Dy()),
+	)
 }
