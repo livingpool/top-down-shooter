@@ -6,13 +6,12 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/livingpool/top-down-shooter/game/game"
 	"github.com/livingpool/top-down-shooter/game/pkg/player"
-	"github.com/livingpool/top-down-shooter/game/util"
 )
 
 func main() {
 	g := &game.Game{
 		DebugMode: true,
-		Players:   []*player.Player{player.NewPlayer(util.ScreenWidth, util.ScreenHeight)},
+		Players:   []*player.Player{player.NewPlayer("todo")},
 	}
 
 	ebiten.SetWindowTitle("Tim's Top Down Shooter <3")

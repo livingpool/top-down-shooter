@@ -3,13 +3,23 @@ package server
 import (
 	"fmt"
 
-	"github.com/livingpool/top-down-shooter/server/model"
+	"github.com/google/uuid"
+	"github.com/livingpool/top-down-shooter/game/util"
 )
 
 // saveClientUpdate takes a player's keystrokes and store them in the appropriate game world
-func (gs *GameServer) saveClientUpdate(gameId string, update model.ClientUpdate) error {
-	if q, exists := gs.inputs[gameId]; exists {
-		q = append(q, update)
+func (gs *GameServer) saveClientUpdate(gameId uuid.UUID, update util.ClientUpdate) error {
+	if g, exists := gs.games[gameId]; exists {
+		id, err := uuid.Parse(update.PlayerId)
+		if err != nil {
+			return fmt.Errorf("error parsing player id: %s", update.PlayerId)
+		}
+
+		if p, exists := g.Players[id]; exists {
+			p.ClientUpdates = append(p.ClientUpdates, update)
+		} else {
+			return fmt.Errorf("player id not found: %v", id)
+		}
 	} else {
 		return fmt.Errorf("game id not found: %v", gameId)
 	}

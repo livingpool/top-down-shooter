@@ -3,24 +3,23 @@ package bullet
 import (
 	"math"
 
+	"github.com/google/uuid"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/livingpool/top-down-shooter/game/assets"
 	"github.com/livingpool/top-down-shooter/game/util"
 )
 
-const (
-	bulletSpeedPerSecond = 350.0
-)
-
 type Bullet struct {
-	object util.GameObject
+	ID     uuid.UUID
+	Object util.GameObject
 }
 
 func NewBullet(pos util.Vector, rotation float64) *Bullet {
 	sprite := assets.Bullet
 
 	return &Bullet{
-		object: util.GameObject{
+		ID: uuid.New(),
+		Object: util.GameObject{
 			Vector:   pos,
 			Rotation: rotation,
 			Sprite:   sprite,
@@ -29,27 +28,31 @@ func NewBullet(pos util.Vector, rotation float64) *Bullet {
 }
 
 func (b *Bullet) Update() {
-	speed := bulletSpeedPerSecond / float64(ebiten.TPS())
+	speed := util.BulletSpeedPerSecond / float64(ebiten.TPS())
 
-	b.object.Vector.X += math.Sin(b.object.Rotation) * speed
-	b.object.Vector.Y += math.Cos(b.object.Rotation) * -speed
+	b.Object.Vector.X += math.Sin(b.Object.Rotation) * speed
+	b.Object.Vector.Y += math.Cos(b.Object.Rotation) * -speed
 }
 
-func (b *Bullet) Draw(screen *ebiten.Image) {
-	op := b.object.CenterAndRotateImage()
+func (b *Bullet) Draw(screen *ebiten.Image, debugMode bool) {
+	op := b.Object.CenterAndRotateImage()
 
 	op.GeoM.Scale(0.5, 0.5)
-	op.GeoM.Translate(b.object.Vector.X, b.object.Vector.Y)
+	op.GeoM.Translate(b.Object.Vector.X, b.Object.Vector.Y)
 
-	screen.DrawImage(b.object.Sprite, op)
+	screen.DrawImage(b.Object.Sprite, op)
+
+	if debugMode {
+		b.Object.DrawDebugCircle(screen, 4, "")
+	}
 }
 
 func (b *Bullet) Collider() util.Rect {
-	bounds := b.object.Sprite.Bounds()
+	bounds := b.Object.Sprite.Bounds()
 
 	return util.NewRect(
-		b.object.Vector.X,
-		b.object.Vector.Y,
+		b.Object.Vector.X,
+		b.Object.Vector.Y,
 		float64(bounds.Dx()),
 		float64(bounds.Dy()),
 	)

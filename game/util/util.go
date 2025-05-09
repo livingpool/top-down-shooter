@@ -40,8 +40,8 @@ func (obj *GameObject) CalcBulletSpawnPosition() Vector {
 	return spawnPos
 }
 
-func (obj *GameObject) DrawDebugCircle(radius float32, debugText string) {
-	obj.Vector.DrawDebugCircle(obj.Sprite, radius)
+func (obj *GameObject) DrawDebugCircle(screen *ebiten.Image, radius float32, debugText string) {
+	obj.Vector.DrawDebugCircle(screen, radius)
 	if debugText != "" {
 		ebitenutil.DebugPrint(obj.Sprite, debugText)
 	}

@@ -2,119 +2,127 @@ package player
 
 import (
 	"math"
-	"time"
 
+	"github.com/coder/websocket"
+	"github.com/google/uuid"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/livingpool/top-down-shooter/game/assets"
 	"github.com/livingpool/top-down-shooter/game/pkg/bullet"
 	"github.com/livingpool/top-down-shooter/game/util"
 )
 
-const (
-	translationPerSecond = 200
-	shootCoolDown        = 500 * time.Millisecond
-	gunPointOffset       = 20.0 * math.Pi / 180.0
-	bulletSpawnOffset    = 30.0
-)
-
 type Player struct {
+	ID            uuid.UUID
+	Name          string
+	Conn          *websocket.Conn
 	Object        util.GameObject
 	LastDelta     util.Vector // render rotation at the last frame to keep the facing position correctly
 	HumanoidState util.HumanoidState
 	Health        int
-	Bullets       []*bullet.Bullet
 	ShootCoolDown *util.Timer
 	Ammo          int
-	Inputs        []Input // local history of inputs
+	ClientUpdates []util.ClientUpdate // local history of inputs
+	LastInputSeq  int
 }
 
-func NewPlayer(screenWidth, screenHeight float64) *Player {
+func NewPlayer(name string) *Player {
 	sprite := assets.ManBlueGunSprite
 
 	pos := util.Vector{
-		X: screenWidth / 2,
-		Y: screenHeight / 2,
+		X: util.InitialPlayerX,
+		Y: util.InitialPlayerY,
 	}
 
 	return &Player{
+		ID:   uuid.New(),
+		Name: name,
 		Object: util.GameObject{
 			Vector:   pos,
-			Rotation: -util.FacingOffset,
+			Rotation: util.InitialPlayerRotation,
 			Sprite:   sprite,
 		},
 		LastDelta:     pos,
 		HumanoidState: util.HumanoidStateStand,
-		Bullets:       make([]*bullet.Bullet, 0),
-		ShootCoolDown: util.NewTimer(shootCoolDown),
-		Ammo:          0,
+		Health:        util.InitialPlayerHealth,
+		ShootCoolDown: util.NewTimer(util.PlayerShootCoolDown),
+		Ammo:          util.InitialPlayerAmmo,
+		ClientUpdates: make([]util.ClientUpdate, 0),
+		LastInputSeq:  0,
 	}
 }
 
-func (p *Player) Update() {
+// Player.Update() updates the player and returns a new Bullet (can be nil).
+// Note that ShootCoolDown must > physics update period, or multiple bullets may be created.
+// TODO: race condition at the slice ClientUpdates?
+func (p *Player) Update() *bullet.Bullet {
 	// move 200 pixels per second
-	speed := float64(translationPerSecond / ebiten.TPS())
+	speed := float64(util.PlayerSpeedPerSecond / ebiten.TPS())
 
-	var delta util.Vector
+	var b *bullet.Bullet
 
-	if ebiten.IsKeyPressed(ebiten.KeyA) {
-		delta.X -= speed
-	}
-	if ebiten.IsKeyPressed(ebiten.KeyD) {
-		delta.X += speed
-	}
-	if ebiten.IsKeyPressed(ebiten.KeyW) {
-		delta.Y -= speed
-	}
-	if ebiten.IsKeyPressed(ebiten.KeyS) {
-		delta.Y += speed
-	}
-
-	// check for diagonal movement
-	if delta.X != 0 && delta.Y != 0 {
-		factor := speed / math.Sqrt(delta.X*delta.X+delta.Y*delta.Y)
-		delta.X *= factor
-		delta.Y *= factor
-	}
-
-	p.Object.Vector.X += delta.X
-	p.Object.Vector.Y += delta.Y
-
-	// update rotation
-	if delta.X != 0 || delta.Y != 0 {
-		p.Object.Rotation = math.Atan2(p.LastDelta.Y, p.LastDelta.X)
-		p.LastDelta = delta
-	}
-
-	// update existing bullets
-	for _, bullet := range p.Bullets {
-		bullet.Update()
-	}
-
-	// shoot at specified intervals
 	p.ShootCoolDown.Update()
-	if p.ShootCoolDown.IsReady() && ebiten.IsKeyPressed(ebiten.KeySpace) {
-		p.ShootCoolDown.Reset()
 
-		spawnPos := p.Object.CalcBulletSpawnPosition()
+	for _, msg := range p.ClientUpdates {
+		// skip inputs we have already simulated locally
+		if msg.Seq <= p.LastInputSeq {
+			continue
+		}
 
-		bullet := bullet.NewBullet(spawnPos, p.Object.Rotation+util.FacingOffset)
-		p.Bullets = append(p.Bullets, bullet)
+		var delta util.Vector
+
+		input := msg.Keys
+		if input.A {
+			delta.X -= speed
+		}
+		if input.D {
+			delta.X += speed
+		}
+		if input.W {
+			delta.Y -= speed
+		}
+		if input.S {
+			delta.Y += speed
+		}
+
+		// check for diagonal movement
+		if delta.X != 0 && delta.Y != 0 {
+			factor := speed / math.Sqrt(delta.X*delta.X+delta.Y*delta.Y)
+			delta.X *= factor
+			delta.Y *= factor
+		}
+
+		p.Object.Vector.X += delta.X
+		p.Object.Vector.Y += delta.Y
+
+		// update rotation
+		if delta.X != 0 || delta.Y != 0 {
+			p.Object.Rotation = math.Atan2(p.LastDelta.Y, p.LastDelta.X)
+			p.LastDelta = delta
+		}
+
+		// constrain shooting at fixed intervals
+		if p.ShootCoolDown.IsReady() && input.Space {
+			p.ShootCoolDown.Reset()
+
+			spawnPos := p.Object.CalcBulletSpawnPosition()
+			b = bullet.NewBullet(spawnPos, p.Object.Rotation+util.FacingOffset)
+		}
+
+		p.LastInputSeq = msg.Seq
 	}
+
+	// TODO: clear array
+
+	return b
 }
 
 func (p *Player) Draw(screen *ebiten.Image, debugMode bool) {
-	// draw player
 	op := p.Object.CenterAndRotateImage()
 	op.GeoM.Translate(p.Object.Vector.X, p.Object.Vector.Y)
 	screen.DrawImage(p.Object.Sprite, op)
 
-	// draw bullets
-	for _, bullet := range p.Bullets {
-		bullet.Draw(screen)
-	}
-
 	if debugMode {
-		p.Object.Vector.DrawDebugCircle(screen, 32)
+		p.Object.DrawDebugCircle(screen, 32, "")
 	}
 }
 
@@ -127,10 +135,4 @@ func (p *Player) Collider() util.Rect {
 		float64(bounds.Dx()),
 		float64(bounds.Dy()),
 	)
-}
-
-type Input struct {
-	Seq       int
-	TimeStamp int
-	Inputs    []rune
 }

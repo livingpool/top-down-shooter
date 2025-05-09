@@ -5,6 +5,11 @@ import (
 	"time"
 )
 
+// Websocket settings
+const (
+	ClientUpdateBufferSize = 16
+)
+
 // Game settings
 const (
 	ScreenWidth         = 800
@@ -39,4 +44,15 @@ const (
 	HumanoidStateReload
 	HumanoidStateSilencer
 	HumanoidStateStand
+)
+
+// Player settings
+const (
+	PlayerSpeedPerSecond = 200 // move x pixels per second
+	PlayerShootCoolDown  = 500 * time.Millisecond
+)
+
+// Bullet settings
+const (
+	BulletSpeedPerSecond = 350.0
 )
