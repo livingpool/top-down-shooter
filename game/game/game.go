@@ -1,6 +1,8 @@
 package game
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/livingpool/top-down-shooter/game/pkg/bullet"
@@ -12,12 +14,21 @@ import (
 // Server creates one game instance for each game that is hosted,
 // and client creates one for itself to play the game.
 // TODO: set boundaries
+// TODO: upon game creation, client need to construct the Players map
 type Game struct {
 	ID        uuid.UUID
 	DebugMode bool
 	IsServer  bool // store a flag to determine if this instance is a server or client
-	Players   map[uuid.UUID]*player.Player
-	Bullets   map[uuid.UUID]*bullet.Bullet
+
+	// not yet used
+	PhysicsDelta          int
+	PhysicsLastUpdateTime time.Time // in ms
+	LocalTimeElapsed      int       // in seconds
+	LocalDelta            int
+	LocalLastFrameTime    time.Time // in ms
+
+	Players map[uuid.UUID]*player.Player
+	Bullets map[uuid.UUID]*bullet.Bullet
 }
 
 func NewGame(isServer bool) *Game {

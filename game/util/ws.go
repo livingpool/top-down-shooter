@@ -1,5 +1,10 @@
 package util
 
+type CreatePlayerResp struct {
+	PlayerId string `json:"player_id"`
+	GameId   string `json:"game_id"`
+}
+
 type ClientUpdate struct {
 	PlayerId  string   `json:"player_id"`
 	Type      string   `json:"type"`
