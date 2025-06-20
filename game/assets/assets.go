@@ -70,6 +70,11 @@ func MustLoadFont(name string) font.Face {
 
 var Bullet = MustLoadImage(`PNG/Tiles/tile_187.png`)
 
+var Tile1 = MustLoadImage(`PNG/Tiles/tile_01.png`)
+var Tile2 = MustLoadImage(`PNG/Tiles/tile_02.png`)
+var Tile3 = MustLoadImage(`PNG/Tiles/tile_03.png`)
+var Tile4 = MustLoadImage(`PNG/Tiles/tile_04.png`)
+
 var ManBlueGunSprite = MustLoadImage(`PNG/Man Blue/manBlue_gun.png`)
 var ManBlueHoldSprite = MustLoadImage(`PNG/Man Blue/manBlue_hold.png`)
 var ManBlueMachineSprite = MustLoadImage(`PNG/Man Blue/manBlue_machine.png`)

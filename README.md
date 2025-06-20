@@ -5,6 +5,8 @@
 - [Ebitengine tutorial](https://threedots.tech/post/making-games-in-go/)
 - [Multiplayer in HTML5](http://buildnewgames.com/real-time-multiplayer/)
 - [Great comment on reddit](https://www.reddit.com/r/gamedev/comments/29589b/comment/cihlh2h/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button)
+- [Unreal Engine networking docs](https://docs.unrealengine.com/udk/Three/NetworkingOverview.html)
+- [Gaffer on Games](https://gafferongames.com)
 
 ## Tech Stack
 - Game Engine: [Ebitengine](https://ebitengine.org)
