@@ -41,13 +41,14 @@ func (g *Game) Update() error {
 	return nil
 }
 
+// Note that order determines the z-index
 func (g *Game) Draw(screen *ebiten.Image) {
+	g.Background.Draw(screen, 0, 0)
+
 	g.Player.Draw(screen, g.DebugMode)
 	for _, b := range g.Bullets {
 		b.Draw(screen, g.DebugMode)
 	}
-
-	g.Background.Draw(screen, 0, 0)
 
 	if g.DebugMode {
 		ebitenutil.DebugPrint(screen, fmt.Sprintf("TPS: %0.2f", ebiten.ActualTPS()))

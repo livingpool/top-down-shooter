@@ -68,12 +68,23 @@ func MustLoadFont(name string) font.Face {
 	return face
 }
 
+/* Bullet */
+
 var Bullet = MustLoadImage(`PNG/Tiles/tile_187.png`)
+
+/* Background */
 
 var Tile1 = MustLoadImage(`PNG/Tiles/tile_01.png`)
 var Tile2 = MustLoadImage(`PNG/Tiles/tile_02.png`)
 var Tile3 = MustLoadImage(`PNG/Tiles/tile_03.png`)
 var Tile4 = MustLoadImage(`PNG/Tiles/tile_04.png`)
+
+var TwoGlassChunks = MustLoadImage(`PNG/Tiles/tile_264.png`)
+var OneGlassChunk = MustLoadImage(`PNG/Tiles/tile_291.png`)
+var TwoGreyPebbles = MustLoadImage(`PNG/Tiles/tile_262.png`)
+var OneGreyPebble = MustLoadImage(`PNG/Tiles/tile_263.png`)
+
+/* Humanoid */
 
 var ManBlueGunSprite = MustLoadImage(`PNG/Man Blue/manBlue_gun.png`)
 var ManBlueHoldSprite = MustLoadImage(`PNG/Man Blue/manBlue_hold.png`)

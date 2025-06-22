@@ -35,13 +35,18 @@ func (b *Background) Draw(screen *ebiten.Image, offsetX, offsetY float64) {
 	for i := -1; i <= repeat; i++ {
 		for j := -1; j <= repeat; j++ {
 			op := &ebiten.DrawImageOptions{}
-			op.GeoM.Translate(float64(w*i), float64(h*j))
+			op.GeoM.Translate(float64(2*w*i), float64(2*h*j))
 			op.GeoM.Translate(offsetX, offsetY)
 
-			// TODO: draw each tile with individual correct offsets
 			screen.DrawImage(assets.Tile1, op)
+
+			op.GeoM.Translate(float64(w), 0)
 			screen.DrawImage(assets.Tile2, op)
+
+			op.GeoM.Translate(0, float64(h))
 			screen.DrawImage(assets.Tile3, op)
+
+			op.GeoM.Translate(-float64(w), 0)
 			screen.DrawImage(assets.Tile4, op)
 		}
 	}
