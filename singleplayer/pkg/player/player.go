@@ -1,6 +1,7 @@
 package player
 
 import (
+	"log/slog"
 	"math"
 
 	"github.com/coder/websocket"
@@ -15,8 +16,8 @@ type Player struct {
 	ID            uuid.UUID
 	Name          string
 	Conn          *websocket.Conn
-	Object        util.GameObject
-	LastDelta     util.Vector // render rotation at the last frame to keep the facing position correctly
+	Object        *util.GameObject
+	LastDelta     util.Point // render rotation at the last frame to keep the facing position correctly
 	HumanoidState util.HumanoidState
 	Health        int
 	ShootCoolDown *util.Timer
@@ -26,19 +27,15 @@ type Player struct {
 func NewPlayer(name string) *Player {
 	sprite := assets.ManBlueGunSprite
 
-	pos := util.Vector{
+	pos := util.Point{
 		X: util.InitialPlayerX,
 		Y: util.InitialPlayerY,
 	}
 
 	return &Player{
-		ID:   uuid.New(),
-		Name: name,
-		Object: util.GameObject{
-			Vector:   pos,
-			Rotation: util.InitialPlayerRotation,
-			Sprite:   sprite,
-		},
+		ID:            uuid.New(),
+		Name:          name,
+		Object:        util.NewGameObject(&pos, util.InitialPlayerRotation, sprite, util.CircleCollider),
 		LastDelta:     pos,
 		HumanoidState: util.HumanoidStateStand,
 		Health:        util.InitialPlayerHealth,
@@ -56,7 +53,7 @@ func (p *Player) Update() *bullet.Bullet {
 
 	p.ShootCoolDown.Update()
 
-	var delta util.Vector
+	var delta util.Point
 
 	if ebiten.IsKeyPressed(ebiten.KeyA) {
 		delta.X -= speed
@@ -78,12 +75,15 @@ func (p *Player) Update() *bullet.Bullet {
 		delta.Y *= factor
 	}
 
-	p.Object.Vector.X += delta.X
-	p.Object.Vector.Y += delta.Y
+	p.Object.Center.X += delta.X
+	p.Object.Center.Y += delta.Y
 
 	// update rotation
 	if delta.X != 0 || delta.Y != 0 {
-		p.Object.Rotation = math.Atan2(p.LastDelta.Y, p.LastDelta.X)
+		newRotation := math.Atan2(p.LastDelta.Y, p.LastDelta.X)
+		slog.Debug("rotation updated", "old", p.Object.Rotation, "new", newRotation)
+
+		p.Object.Rotation = newRotation
 		p.LastDelta = delta
 	}
 
@@ -92,7 +92,9 @@ func (p *Player) Update() *bullet.Bullet {
 		p.ShootCoolDown.Reset()
 
 		spawnPos := p.Object.CalcBulletSpawnPosition()
-		b = bullet.NewBullet(spawnPos, p.Object.Rotation+util.FacingOffset)
+		b = bullet.NewBullet(&spawnPos, p.Object.Rotation+util.FacingOffset)
+
+		slog.Debug("new bullet", "pos", spawnPos)
 	}
 
 	return b
@@ -100,21 +102,10 @@ func (p *Player) Update() *bullet.Bullet {
 
 func (p *Player) Draw(screen *ebiten.Image, debugMode bool) {
 	op := p.Object.CenterAndRotateImage()
-	op.GeoM.Translate(p.Object.Vector.X, p.Object.Vector.Y)
+
 	screen.DrawImage(p.Object.Sprite, op)
 
 	if debugMode {
-		p.Object.DrawDebugCircle(screen, 32, "")
+		p.Object.DrawDebugCircle(screen, 32, p.Name)
 	}
-}
-
-func (p *Player) Collider() util.Rect {
-	bounds := p.Object.Sprite.Bounds()
-
-	return util.NewRect(
-		p.Object.Vector.X,
-		p.Object.Vector.Y,
-		float64(bounds.Dx()),
-		float64(bounds.Dy()),
-	)
 }

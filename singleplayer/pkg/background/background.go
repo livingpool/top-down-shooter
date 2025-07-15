@@ -1,9 +1,11 @@
 package background
 
 import (
+	"slices"
+
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/livingpool/top-down-shooter/game/assets"
-	"github.com/livingpool/top-down-shooter/game/util"
+	"github.com/livingpool/top-down-shooter/singleplayer/util"
 )
 
 // So the idea is:
@@ -21,13 +23,26 @@ import (
 // Finally, draw the player.
 
 type Background struct {
+	Objects []*util.GameObject // their relative positions are fixed
 }
 
+func NewBackground() *Background {
+	// TODO: next step: draw the map!
+	trees := []*util.GameObject{
+		util.NewGameObject(&util.Point{X: 100, Y: 100}, 0, assets.SmallBrownTree, util.CircleCollider),
+	}
+
+	return &Background{
+		Objects: slices.Concat(trees),
+	}
+}
+
+// b.Update updates every background objects' centers and their colliders' centers
 func (b *Background) Update() {
 }
 
-// Draw the background w.r.t the camera (player).
-func (b *Background) Draw(screen *ebiten.Image, offsetX, offsetY float64) {
+// b.Draw the background w.r.t the camera (player)
+func (b *Background) Draw(screen *ebiten.Image, offsetX, offsetY float64, debugMode bool) {
 	repeat := max(util.ScreenWidth/assets.Tile1.Bounds().Dx(), util.ScreenHeight/assets.Bullet.Bounds().Dy()) + 2
 
 	w, h := assets.Tile1.Bounds().Dx(), assets.Tile1.Bounds().Dy()
@@ -48,6 +63,16 @@ func (b *Background) Draw(screen *ebiten.Image, offsetX, offsetY float64) {
 
 			op.GeoM.Translate(-float64(w), 0)
 			screen.DrawImage(assets.Tile4, op)
+		}
+	}
+
+	// objects that are subject to collision
+	for _, obj := range b.Objects {
+		op := obj.CenterAndRotateImage()
+		screen.DrawImage(obj.Sprite, op)
+
+		if debugMode {
+			obj.DrawDebugCircle(screen, 32, "tree")
 		}
 	}
 }

@@ -2,6 +2,8 @@ package game
 
 import (
 	"fmt"
+	"log/slog"
+	"os"
 
 	"github.com/google/uuid"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -20,10 +22,19 @@ type Game struct {
 	Bullets    map[uuid.UUID]*bullet.Bullet
 }
 
-func NewGame() *Game {
+func NewGame(debugMode bool) *Game {
+	logLevel := new(slog.LevelVar)
+	if debugMode {
+		logLevel.Set(slog.LevelDebug)
+	}
+	slog.SetDefault(slog.New(slog.NewTextHandler(
+		os.Stdout,
+		&slog.HandlerOptions{Level: logLevel},
+	)))
+
 	return &Game{
-		DebugMode:  true,
-		Background: &background.Background{},
+		DebugMode:  debugMode,
+		Background: background.NewBackground(),
 		Player:     player.NewPlayer("You"),
 		Bullets:    make(map[uuid.UUID]*bullet.Bullet),
 	}
@@ -38,12 +49,14 @@ func (g *Game) Update() error {
 		g.Bullets[uuid.New()] = newBullet
 	}
 
+	g.ResolveCollisions()
+
 	return nil
 }
 
 // Note that order determines the z-index
 func (g *Game) Draw(screen *ebiten.Image) {
-	g.Background.Draw(screen, 0, 0)
+	g.Background.Draw(screen, 0, 0, g.DebugMode)
 
 	g.Player.Draw(screen, g.DebugMode)
 	for _, b := range g.Bullets {

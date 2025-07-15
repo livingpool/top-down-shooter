@@ -84,6 +84,20 @@ var OneGlassChunk = MustLoadImage(`PNG/Tiles/tile_291.png`)
 var TwoGreyPebbles = MustLoadImage(`PNG/Tiles/tile_262.png`)
 var OneGreyPebble = MustLoadImage(`PNG/Tiles/tile_263.png`)
 
+var SmallGreenTree = MustLoadImage(`PNG/Tiles/tile_183.png`)
+var LargeGreenTreeTopLeft = MustLoadImages(`PNG/Tiles/tile_181.png`)
+var LargeGreenTreeTopRight = MustLoadImages(`PNG/Tiles/tile_182.png`)
+var LargeGreenTreeBottomLeft = MustLoadImages(`PNG/Tiles/tile_208.png`)
+var LargeGreenTreeBottomRight = MustLoadImages(`PNG/Tiles/tile_209.png`)
+
+var SmallBrownTree = MustLoadImage(`PNG/Tiles/tile_186.png`)
+var LargeBrownTreeTopLeft = MustLoadImages(`PNG/Tiles/tile_184.png`)
+var LargeBrownTreeTopRight = MustLoadImages(`PNG/Tiles/tile_185.png`)
+var LargeBrownTreeBottomLeft = MustLoadImage(`PNG/Tiles/tile_211.png`)
+var LargeBrownTreeBottomRight = MustLoadImage(`PNG/Tiles/tile_212.png`)
+
+var SmallGreenCouch = MustLoadImage(`PNG/Tiles/tile_450.png`)
+
 /* Humanoid */
 
 var ManBlueGunSprite = MustLoadImage(`PNG/Man Blue/manBlue_gun.png`)

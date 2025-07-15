@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	g := game.NewGame()
+	g := game.NewGame(true)
 
 	ebiten.SetWindowTitle("Tim's Top Down Shooter <3")
 

@@ -32,24 +32,24 @@ func (zs *ZombieSpawner) Update() {
 
 func (zs *ZombieSpawner) Draw(screen *ebiten.Image) {
 	for _, z := range zs.zombies {
-		bounds := z.object.Sprite.Bounds()
+		bounds := z.Object.Sprite.Bounds()
 		halfW := float64(bounds.Dx()) / 2
 		halfH := float64(bounds.Dy()) / 2
 
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Translate(-halfW, -halfH)
-		op.GeoM.Rotate(z.object.Rotation)
+		op.GeoM.Rotate(z.Object.Rotation)
 		op.GeoM.Translate(halfW, halfH)
 
-		op.GeoM.Translate(z.object.X, z.object.Y)
+		op.GeoM.Translate(z.Object.X, z.Object.Y)
 
-		screen.DrawImage(z.object.Sprite, op)
+		screen.DrawImage(z.Object.Sprite, op)
 	}
 }
 
 // Generates a random position at the edge of the screen (a ring).
 // Targets
-func randPosition(screenWidth, screenHeight float64, target util.Vector) util.Vector {
+func randPosition(screenWidth, screenHeight float64, target util.Point) util.Point {
 	// the distance from the center the zombie should spawn at — half the width
 	r := screenWidth / 2.0
 
@@ -57,7 +57,7 @@ func randPosition(screenWidth, screenHeight float64, target util.Vector) util.Ve
 	angle := rand.Float64() * 2 * math.Pi
 
 	// figure out the spawn position by moving r pixels from the target at the chosen angle
-	pos := util.Vector{
+	pos := util.Point{
 		X: target.X + math.Cos(angle)*r,
 		Y: target.Y + math.Sin(angle)*r,
 	}
@@ -69,15 +69,15 @@ func randPosition(screenWidth, screenHeight float64, target util.Vector) util.Ve
 func randVelocity()
 
 type Zombie struct {
-	object util.GameObject
+	Object util.GameObject
 }
 
 func NewZombie() *Zombie {
 	sprite := assets.Zombie1HoldSprite
 
 	return &Zombie{
-		object: util.GameObject{
-			Vector:   util.Vector{},
+		Object: util.GameObject{
+			Point:    util.Point{},
 			Rotation: -util.FacingOffset,
 			Sprite:   sprite,
 		},
@@ -87,13 +87,11 @@ func NewZombie() *Zombie {
 func (z *Zombie) Update() {
 }
 
-func (z *Zombie) Collider() util.Rect {
-	bounds := z.object.Sprite.Bounds()
+func (z *Zombie) Collider() util.Circle {
+	bounds := z.Object.Sprite.Bounds()
 
-	return util.NewRect(
-		z.object.Vector.X,
-		z.object.Vector.Y,
-		float64(bounds.Dx()),
-		float64(bounds.Dy()),
+	return util.NewCircle(
+		z.Object.Point,
+		max(float64(bounds.Dx())/2, float64(bounds.Dy())/2),
 	)
 }
