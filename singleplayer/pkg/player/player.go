@@ -94,7 +94,7 @@ func (p *Player) Update() *bullet.Bullet {
 		spawnPos := p.Object.CalcBulletSpawnPosition()
 		b = bullet.NewBullet(&spawnPos, p.Object.Rotation+util.FacingOffset)
 
-		slog.Debug("new bullet", "pos", spawnPos)
+		slog.Info("new bullet", "pos", spawnPos)
 	}
 
 	return b

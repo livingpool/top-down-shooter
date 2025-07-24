@@ -12,8 +12,8 @@ const (
 
 // Game settings
 const (
-	ScreenWidth         = 800
-	ScreenHeight        = 600
+	ScreenWidth         = 1200
+	ScreenHeight        = 800
 	ServerPhysicsPeriod = 15 * time.Millisecond
 	ServerUpdatePeriod  = 45 * time.Millisecond
 )

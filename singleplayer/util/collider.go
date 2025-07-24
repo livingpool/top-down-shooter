@@ -1,6 +1,7 @@
 package util
 
 import (
+	"log"
 	"log/slog"
 	"math"
 )
@@ -18,9 +19,9 @@ const (
 
 var dirs = [4][2]float64{
 	{1, 1},
-	{1, -1},
-	{-1, -1},
 	{-1, 1},
+	{-1, -1},
+	{1, -1},
 }
 
 // There are currently two Collider objects: Rect and Circle
@@ -65,16 +66,20 @@ func (r Rect) Collide(other Collider) (Vector, bool) {
 // r.GetVertices returns the top right vertice followed by others in a clockwise fashion
 func (r Rect) GetVertices() [4]Point {
 	var res [4]Point
-	c := math.Cos(r.Rotation)
-	s := math.Sin(r.Rotation)
+
+	halfW := r.DimX / 2
+	halfH := r.DimY / 2
 
 	for i := range 4 {
-		x := r.Center.X + dirs[i][0]*r.DimX/2
-		y := r.Center.Y + dirs[i][1]*r.DimY/2
+		rad := r.Rotation
 
+		x := dirs[i][0] * halfW
+		y := dirs[i][1] * halfH
+
+		// multiple vector by rotation matrix
 		res[i] = Point{
-			X: x*c - y*s,
-			Y: x*s + y*c,
+			X: r.Center.X + x*math.Cos(rad) - y*math.Sin(rad),
+			Y: r.Center.Y + x*math.Sin(rad) + y*math.Cos(rad),
 		}
 	}
 
@@ -101,15 +106,19 @@ func (c Circle) Collide(other Collider) (Vector, bool) {
 		v, yes := other.IntersectRectAndCircle(c)
 		return v.ReverseDirection(), yes
 	default:
-		slog.Error("unrecognized collider type")
+		log.Fatal("unrecognized collider type")
 		return Vector{}, false
 	}
 }
 
 // Note for colliders below:
 // They only check for collisions that "just" happened, i.e., objects running into each other.
+// The objects need to be large enough for this to work.
 // I am quite sure if an object is fully embedded in another, the returned Vector will be incorrect.
-// So I also need to make sure objects' colliders are big enough and their moving speeds are slow enough.
+//
+// The idea is to simulate rigid body by correcting an object's position upon collision.
+// Correction is done by subtracting a vector. So if we look very closely, the two objects rapidly go in and out of each other.
+// If the game's FPS is high enough, this is not noticeable.
 
 // Use of the returned Vector to separate the two shapes: add it to c, or subtract it from r
 func (r Rect) IntersectRectAndCircle(c Circle) (Vector, bool) {
@@ -117,7 +126,9 @@ func (r Rect) IntersectRectAndCircle(c Circle) (Vector, bool) {
 
 	var dist = math.Inf(1)
 	var axis Vector
+	var axes = make([]Vector, 0, 5)
 
+	// special axis for circle vs polygon in SAT
 	for _, v := range vertices {
 		curr := v.Distance(*c.Center)
 		if dist > curr {
@@ -126,10 +137,21 @@ func (r Rect) IntersectRectAndCircle(c Circle) (Vector, bool) {
 		}
 	}
 
+	axes = append(axes, axis.Normalize())
+	for i := range 4 {
+		var axis Vector
+		if i != 3 {
+			axis = vertices[i].Vector(vertices[i+1]).GetPerpendicularVector()
+		} else {
+			axis = vertices[i].Vector(vertices[0]).GetPerpendicularVector()
+		}
+		axes = append(axes, axis.Normalize())
+	}
+
 	var smallestOverlap = math.Inf(1)
 	var offsetVector Vector
 
-	for i := 0; i < 4; i++ {
+	for _, axis := range axes {
 		// get r's 2 projected points onto the axis
 		max1 := axis.InnerProduct(Vector(vertices[0]))
 		min1 := max1
@@ -158,16 +180,18 @@ func (r Rect) IntersectRectAndCircle(c Circle) (Vector, bool) {
 				offsetVector = axis
 			}
 		} else { // found a gap, so they don't overlap
+			slog.Debug("no overlap")
 			return offsetVector, false
 		}
 	}
 
+	// no gap found, so the two shapes overlap
+
 	offsetVector = offsetVector.Normalize().Scale(smallestOverlap)
 
-	// TODO: there may be a way to deterministically test the direction of the offset vector
-	var test Circle = c
+	var test = Circle{Center: &Point{c.Center.X, c.Center.Y}}
 	test.Center.Add(offsetVector)
-	if _, yes := r.IntersectRectAndCircle(test); yes {
+	if test.Center.ManhattanDistance(*r.Center) < c.Center.ManhattanDistance(*r.Center) {
 		offsetVector = offsetVector.ReverseDirection()
 	}
 
@@ -184,12 +208,12 @@ func (r Rect) IntersectRectAndRect(other Rect) (Vector, bool) {
 	var smallestOverlap = math.Inf(1)
 	var offsetVector Vector
 
-	for i := 0; i < 4; i++ {
+	for i := range 4 {
 		var axis Vector
 		if i != 3 {
-			axis = vertices1[i].Vector(vertices1[i+1]).GetPerpendicularVector()
+			axis = vertices1[i].Vector(vertices1[i+1]).GetPerpendicularVector().Normalize()
 		} else {
-			axis = vertices1[i].Vector(vertices1[0]).GetPerpendicularVector()
+			axis = vertices1[i].Vector(vertices1[0]).GetPerpendicularVector().Normalize()
 		}
 
 		// get r's 2 projected points onto the axis
@@ -224,6 +248,7 @@ func (r Rect) IntersectRectAndRect(other Rect) (Vector, bool) {
 				offsetVector = axis
 			}
 		} else { // found a gap, so they don't overlap
+			slog.Debug("no overlap")
 			return offsetVector, false
 		}
 	}
@@ -232,10 +257,9 @@ func (r Rect) IntersectRectAndRect(other Rect) (Vector, bool) {
 
 	offsetVector = offsetVector.Normalize().Scale(smallestOverlap)
 
-	// TODO: there may be a way to deterministically test the direction of the offset vector
-	var test Rect = other
+	var test = Rect{Center: &Point{other.Center.X, other.Center.Y}}
 	test.Center.Add(offsetVector)
-	if _, yes := r.IntersectRectAndRect(test); yes {
+	if test.Center.ManhattanDistance(*r.Center) < other.Center.ManhattanDistance(*r.Center) {
 		offsetVector = offsetVector.ReverseDirection()
 	}
 

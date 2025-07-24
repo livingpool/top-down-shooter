@@ -25,7 +25,7 @@ type Game struct {
 func NewGame(debugMode bool) *Game {
 	logLevel := new(slog.LevelVar)
 	if debugMode {
-		logLevel.Set(slog.LevelDebug)
+		logLevel.Set(slog.LevelInfo) // LevelDebug or LevelInfo
 	}
 	slog.SetDefault(slog.New(slog.NewTextHandler(
 		os.Stdout,

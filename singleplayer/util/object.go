@@ -2,7 +2,7 @@ package util
 
 import (
 	"image/color"
-	"log/slog"
+	"log"
 	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -32,7 +32,7 @@ func NewGameObject(center *Point, rotation float64, sprite *ebiten.Image, collid
 	case CircleCollider:
 		obj.Collider = NewCircle(center, 32)
 	default:
-		slog.Error("unsupported collider type", "type", colliderType)
+		log.Fatal("unsupported collider type")
 	}
 
 	return obj
@@ -83,6 +83,18 @@ func (obj GameObject) Collide(other GameObject) (Vector, bool) {
 	return obj.Collider.Collide(other.Collider)
 }
 
+func (obj GameObject) GetColliderType() ColliderType {
+	switch obj.Collider.(type) {
+	case Rect:
+		return RectCollider
+	case Circle:
+		return CircleCollider
+	default:
+		log.Fatal("unrecognized collider type")
+		return -1
+	}
+}
+
 type Point struct {
 	X float64
 	Y float64
@@ -113,6 +125,7 @@ func (p Point) DrawDebugCircle(screen *ebiten.Image, radius float32) {
 	vector.StrokeCircle(screen, float32(p.X), float32(p.Y), radius, 1, c, true)
 }
 
+// cant draw a rectangle with rotation i think
 func (p Point) DrawDebugRect(screen *ebiten.Image, dimX, dimY float32) {
 	c := color.RGBA{R: 74, G: 246, B: 38, A: 1}
 	originX := float32(p.X) - dimX/2
@@ -146,13 +159,15 @@ func (v Vector) ReverseDirection() Vector {
 func (v Vector) Normalize() Vector {
 	magnitude := v.Length()
 	if magnitude == 0 {
-		slog.Error("vector has length = 0, returning it as is...")
-		return v
+		log.Fatalf("vector %v has length = 0, returning it as is...", v)
 	}
 	return Vector{v.X / magnitude, v.Y / magnitude}
 }
 
 func (v Vector) Scale(n float64) Vector {
+	if n == 0 {
+		log.Fatal("scaling to zero is not allowed")
+	}
 	return Vector{v.X * n, v.Y * n}
 }
 

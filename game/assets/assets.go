@@ -6,6 +6,11 @@ import (
 	_ "image/png"
 	"io/fs"
 	"log"
+	"log/slog"
+	"regexp"
+	"slices"
+	"strconv"
+	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"golang.org/x/image/font"
@@ -35,12 +40,48 @@ func MustLoadImages(path string) []*ebiten.Image {
 	if err != nil {
 		log.Fatalf("fs.Glob failed: %v", err)
 	}
+	slog.Info("found matching files", "count", len(matches), "path", path)
 
-	images := make([]*ebiten.Image, len(matches))
-	for i, match := range matches {
-		images[i] = MustLoadImage(match)
+	re := regexp.MustCompile(`tile_(\d+)\.png`)
+	slices.SortFunc(matches, func(a, b string) int {
+		matchesA := re.FindStringSubmatch(a)
+		matchesB := re.FindStringSubmatch(b)
+
+		idxA, _ := strconv.Atoi(matchesA[1])
+		idxB, _ := strconv.Atoi(matchesB[1])
+
+		if idxA < idxB {
+			return -1
+		} else if idxA > idxB {
+			return 1
+		} else {
+			return 0
+		}
+	})
+
+	// some tile numbers are missing, e.g. tile_27.png,
+	// so for those, i filled in nil.
+	lastImgNum, _ := strconv.Atoi(re.FindStringSubmatch(matches[len(matches)-1])[1])
+
+	// images start from index 1, i.e., tile_01.png
+	images := make([]*ebiten.Image, lastImgNum)
+	cursor := 0
+	for i := range lastImgNum {
+		idx := strconv.Itoa(i + 1)
+		if len(idx) < 2 {
+			idx = "0" + idx
+		}
+
+		if strings.Contains(matches[cursor], idx) {
+			images[i] = MustLoadImage(matches[cursor])
+			cursor++
+		} else {
+			images[i] = nil
+			slog.Info("nil image (0-based)", "idx", i)
+		}
 	}
 
+	slog.Info("loaded images", "count", len(images))
 	return images
 }
 
@@ -74,29 +115,7 @@ var Bullet = MustLoadImage(`PNG/Tiles/tile_187.png`)
 
 /* Background */
 
-var Tile1 = MustLoadImage(`PNG/Tiles/tile_01.png`)
-var Tile2 = MustLoadImage(`PNG/Tiles/tile_02.png`)
-var Tile3 = MustLoadImage(`PNG/Tiles/tile_03.png`)
-var Tile4 = MustLoadImage(`PNG/Tiles/tile_04.png`)
-
-var TwoGlassChunks = MustLoadImage(`PNG/Tiles/tile_264.png`)
-var OneGlassChunk = MustLoadImage(`PNG/Tiles/tile_291.png`)
-var TwoGreyPebbles = MustLoadImage(`PNG/Tiles/tile_262.png`)
-var OneGreyPebble = MustLoadImage(`PNG/Tiles/tile_263.png`)
-
-var SmallGreenTree = MustLoadImage(`PNG/Tiles/tile_183.png`)
-var LargeGreenTreeTopLeft = MustLoadImages(`PNG/Tiles/tile_181.png`)
-var LargeGreenTreeTopRight = MustLoadImages(`PNG/Tiles/tile_182.png`)
-var LargeGreenTreeBottomLeft = MustLoadImages(`PNG/Tiles/tile_208.png`)
-var LargeGreenTreeBottomRight = MustLoadImages(`PNG/Tiles/tile_209.png`)
-
-var SmallBrownTree = MustLoadImage(`PNG/Tiles/tile_186.png`)
-var LargeBrownTreeTopLeft = MustLoadImages(`PNG/Tiles/tile_184.png`)
-var LargeBrownTreeTopRight = MustLoadImages(`PNG/Tiles/tile_185.png`)
-var LargeBrownTreeBottomLeft = MustLoadImage(`PNG/Tiles/tile_211.png`)
-var LargeBrownTreeBottomRight = MustLoadImage(`PNG/Tiles/tile_212.png`)
-
-var SmallGreenCouch = MustLoadImage(`PNG/Tiles/tile_450.png`)
+var Tiles = MustLoadImages(`PNG/Tiles/*`)
 
 /* Humanoid */
 
