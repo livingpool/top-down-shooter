@@ -24,7 +24,7 @@ type Player struct {
 	Ammo          int
 }
 
-func NewPlayer(name string) *Player {
+func NewPlayer(name string, camera *util.Camera) *Player {
 	sprite := assets.ManBlueGunSprite
 
 	pos := util.Point{
@@ -45,7 +45,7 @@ func NewPlayer(name string) *Player {
 }
 
 // Player.Update() updates the player and returns a new Bullet (can be nil).
-func (p *Player) Update() *bullet.Bullet {
+func (p *Player) Update(camera *util.Camera) *bullet.Bullet {
 	// move 200 pixels per second
 	speed := float64(util.PlayerSpeedPerSecond / ebiten.TPS())
 
@@ -77,6 +77,9 @@ func (p *Player) Update() *bullet.Bullet {
 
 	p.Object.Center.X += delta.X
 	p.Object.Center.Y += delta.Y
+
+	camera.X += delta.X
+	camera.Y += delta.Y
 
 	// update rotation
 	if delta.X != 0 || delta.Y != 0 {

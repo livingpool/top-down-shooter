@@ -19,6 +19,7 @@ type Game struct {
 	DebugMode  bool
 	Background *background.Background
 	Player     *player.Player
+	Camera     *util.Camera // camera follows the player
 	Bullets    map[uuid.UUID]*bullet.Bullet
 }
 
@@ -32,16 +33,19 @@ func NewGame(debugMode bool) *Game {
 		&slog.HandlerOptions{Level: logLevel},
 	)))
 
+	camera := util.InitCamera()
+
 	return &Game{
 		DebugMode:  debugMode,
 		Background: background.NewBackground(),
-		Player:     player.NewPlayer("You"),
+		Player:     player.NewPlayer("You", camera),
+		Camera:     camera,
 		Bullets:    make(map[uuid.UUID]*bullet.Bullet),
 	}
 }
 
 func (g *Game) Update() error {
-	newBullet := g.Player.Update()
+	newBullet := g.Player.Update(g.Camera)
 	for _, b := range g.Bullets {
 		b.Update()
 	}

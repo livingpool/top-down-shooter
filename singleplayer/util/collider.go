@@ -13,7 +13,8 @@ type Collider interface {
 type ColliderType int
 
 const (
-	RectCollider ColliderType = iota
+	NoCollider ColliderType = iota
+	RectCollider
 	CircleCollider
 )
 

@@ -10,6 +10,25 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
+type Camera Point
+
+func (c *Camera) WorldToScreen(p Point) Point {
+	return Point{X: p.X - c.X, Y: p.Y - c.Y}
+}
+
+func (c *Camera) Sub(v Vector) {
+	c.X -= v.X
+	c.Y -= v.Y
+}
+
+// i opted for a package global bc otherwise i need to pass this in every game object
+var GameCamera *Camera
+
+func InitCamera() *Camera {
+	GameCamera = &Camera{X: 0, Y: 0}
+	return GameCamera
+}
+
 type GameObject struct {
 	Center   *Point        // center coord of the object
 	Rotation float64       // where the object is facing
@@ -27,6 +46,8 @@ func NewGameObject(center *Point, rotation float64, sprite *ebiten.Image, collid
 	}
 
 	switch colliderType { // i hard coded the dimensions bcos all my sprites are of the same dimensions
+	case NoCollider:
+		obj.Collider = nil
 	case RectCollider:
 		obj.Collider = NewRect(center, 64, 64, rotation)
 	case CircleCollider:
@@ -48,7 +69,8 @@ func (obj GameObject) CenterAndRotateImage() *ebiten.DrawImageOptions {
 	op.GeoM.Translate(-halfW, -halfH)
 	op.GeoM.Rotate(obj.Rotation)
 
-	op.GeoM.Translate(obj.Center.X, obj.Center.Y)
+	screenCoords := GameCamera.WorldToScreen(*obj.Center)
+	op.GeoM.Translate(screenCoords.X, screenCoords.Y)
 
 	return op
 }
@@ -66,33 +88,24 @@ func (obj GameObject) CalcBulletSpawnPosition() Point {
 }
 
 func (obj GameObject) DrawDebugCircle(screen *ebiten.Image, radius float32, debugText string) {
-	obj.Center.DrawDebugCircle(screen, radius)
+	GameCamera.WorldToScreen(*obj.Center).DrawDebugCircle(screen, radius)
 	if debugText != "" {
 		ebitenutil.DebugPrint(obj.Sprite, debugText)
 	}
 }
 
 func (obj GameObject) DrawDebugRect(screen *ebiten.Image, dimX, dimY float32, debugText string) {
-	obj.Center.DrawDebugRect(screen, dimX, dimY)
+	GameCamera.WorldToScreen(*obj.Center).DrawDebugRect(screen, dimX, dimY)
 	if debugText != "" {
 		ebitenutil.DebugPrint(obj.Sprite, debugText)
 	}
 }
 
 func (obj GameObject) Collide(other GameObject) (Vector, bool) {
-	return obj.Collider.Collide(other.Collider)
-}
-
-func (obj GameObject) GetColliderType() ColliderType {
-	switch obj.Collider.(type) {
-	case Rect:
-		return RectCollider
-	case Circle:
-		return CircleCollider
-	default:
-		log.Fatal("unrecognized collider type")
-		return -1
+	if obj.Collider == nil || other.Collider == nil {
+		return Vector{}, false
 	}
+	return obj.Collider.Collide(other.Collider)
 }
 
 type Point struct {

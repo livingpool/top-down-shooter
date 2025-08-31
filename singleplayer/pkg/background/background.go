@@ -1,7 +1,7 @@
 package background
 
 import (
-	"log"
+	"image"
 	"math"
 	"slices"
 
@@ -25,7 +25,7 @@ import (
 // Finally, draw the player.
 
 type Background struct {
-	Objects []*util.GameObject // their relative positions are fixed
+	Objects []*util.GameObject
 }
 
 func NewBackground() *Background {
@@ -39,7 +39,10 @@ func NewBackground() *Background {
 
 	var sx, sy float64 = 120, 200 // starting center of a corner sprite of the walls, all other walls are relative to it
 
+	w, h := assets.Tiles[0].Bounds().Dx(), assets.Tiles[0].Bounds().Dy() // assume all images have same w and h
+
 	walls := []*util.GameObject{
+		// center block
 		util.NewGameObject(&util.Point{X: sx, Y: sy}, tilt, assets.Tiles[108], util.RectCollider),
 		util.NewGameObject(&util.Point{X: sx - s, Y: sy + c}, tilt, assets.Tiles[114], util.RectCollider),
 		util.NewGameObject(&util.Point{X: sx + c, Y: sy + s}, tilt, assets.Tiles[110], util.RectCollider),
@@ -49,6 +52,125 @@ func NewBackground() *Background {
 		util.NewGameObject(&util.Point{X: sx + 4*c + s, Y: sy + 4*s - c}, tilt, assets.Tiles[140], util.RectCollider),
 		util.NewGameObject(&util.Point{X: sx + 4*c - s, Y: sy + 4*s + c}, tilt, assets.Tiles[135], util.RectCollider),
 		util.NewGameObject(&util.Point{X: sx + 5*c - s, Y: sy + 5*s + c}, tilt, assets.Tiles[113], util.RectCollider),
+
+		// concrete floor at the top right corner
+		util.NewGameObject(&util.Point{X: sx + 4*c + 2*s, Y: sy + 4*s - 2*c}, tilt, assets.Tiles[10], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx + 4*c + 2*s, Y: sy + 4*s - 2*c}, tilt, assets.Tiles[436], util.NoCollider), // glass door
+		util.NewGameObject(&util.Point{X: sx + 5*c + 2*s, Y: sy + 5*s - 2*c}, tilt, assets.Tiles[10], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx + 6*c + 2*s, Y: sy + 6*s - 2*c}, tilt, assets.Tiles[10], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx + 7*c + 2*s, Y: sy + 7*s - 2*c}, tilt, assets.Tiles[10], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx + 5*c + s, Y: sy + 5*s - c}, tilt, assets.Tiles[10], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx + 6*c + s, Y: sy + 6*s - c}, tilt, assets.Tiles[10], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx + 7*c + s, Y: sy + 7*s - c}, tilt, assets.Tiles[10], util.NoCollider),
+		util.NewGameObject(
+			&util.Point{X: sx + 7.5*c + s, Y: sy + 7.5*s - c}, // note that the position has to be adjusted as well
+			tilt,
+			assets.Tiles[10].SubImage(image.Rect(0, 0, w, h)).(*ebiten.Image), // show left half of the image
+			util.NoCollider,
+		),
+		util.NewGameObject(&util.Point{X: sx + 5*c, Y: sy + 5*s}, tilt, assets.Tiles[10], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx + 6*c, Y: sy + 6*s}, tilt, assets.Tiles[10], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx + 7*c, Y: sy + 7*s}, tilt, assets.Tiles[10], util.NoCollider),
+		util.NewGameObject(
+			&util.Point{X: sx + 6*c - 0.5*s, Y: sy + 7*s + 0.5*c},
+			tilt,
+			assets.Tiles[10].SubImage(image.Rect(0, 0, w, h/2)).(*ebiten.Image), // show top half of the image
+			util.NoCollider,
+		),
+
+		// wooden floor
+		util.NewGameObject(&util.Point{X: sx - s + c, Y: sy + c + s}, tilt+math.Pi, assets.Tiles[41], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx - s + 2*c, Y: sy + c + 2*s}, tilt+math.Pi, assets.Tiles[41], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx - s + 3*c, Y: sy + c + 3*s}, tilt+math.Pi, assets.Tiles[41], util.NoCollider),
+		// above 3 is to cover for a small gap between the kitchen area and the wooden floor
+		util.NewGameObject(&util.Point{X: sx - 2*s, Y: sy + 2*c}, tilt, assets.Tiles[41], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx - 2*s, Y: sy + 2*c}, tilt, assets.Tiles[436], util.NoCollider), // glass door
+		util.NewGameObject(&util.Point{X: sx - 3*s, Y: sy + 3*c}, tilt, assets.Tiles[41], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx - 3*s, Y: sy + 3*c}, tilt, assets.Tiles[436], util.NoCollider), // glass door
+		util.NewGameObject(&util.Point{X: sx - 3*s + c, Y: sy + 3*c + s}, tilt, assets.Tiles[41], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx - 3*s + 2*c, Y: sy + 3*c + 2*s}, tilt, assets.Tiles[41], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx - 3*s + 3*c, Y: sy + 3*c + 3*s}, tilt, assets.Tiles[41], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx - 3*s + 4*c, Y: sy + 3*c + 4*s}, tilt, assets.Tiles[41], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx - 3*s + 5*c, Y: sy + 3*c + 5*s}, tilt, assets.Tiles[41], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx - 3*s + 6*c, Y: sy + 3*c + 6*s}, tilt, assets.Tiles[43], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx - 3*s + 7*c, Y: sy + 3*c + 7*s}, tilt, assets.Tiles[45], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx - 3*s + 8*c, Y: sy + 3*c + 8*s}, tilt, assets.Tiles[45], util.NoCollider),
+
+		util.NewGameObject(&util.Point{X: sx - 2*s + c, Y: sy + 2*c + s}, tilt, assets.Tiles[41], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx - 2*s + 2*c, Y: sy + 2*c + 2*s}, tilt, assets.Tiles[43], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx - 2*s + 3*c, Y: sy + 2*c + 3*s}, tilt, assets.Tiles[41], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx - 2*s + 4*c, Y: sy + 2*c + 4*s}, tilt, assets.Tiles[45], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx - 2*s + 5*c, Y: sy + 2*c + 5*s}, tilt, assets.Tiles[45], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx - 2*s + 6*c, Y: sy + 2*c + 6*s}, tilt, assets.Tiles[41], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx - 2*s + 7*c, Y: sy + 2*c + 7*s}, tilt, assets.Tiles[43], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx - 2*s + 8*c, Y: sy + 2*c + 8*s}, tilt, assets.Tiles[41], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx - 2*s + 8*c, Y: sy + 2*c + 8*s}, tilt, assets.Tiles[437], util.NoCollider), // glass door
+
+		util.NewGameObject(
+			&util.Point{X: sx + 6*c - 1.5*s, Y: sy + 5*s + 1.5*c},
+			tilt,
+			assets.Tiles[41].SubImage(image.Rect(0, 0, w, h/2)).(*ebiten.Image), // show top half of the image
+			util.NoCollider,
+		),
+
+		util.NewGameObject(&util.Point{X: sx - 4*s + c, Y: sy + 4*c + s}, tilt, assets.Tiles[43], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx - 4*s + 2*c, Y: sy + 4*c + 2*s}, tilt, assets.Tiles[41], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx - 4*s + 3*c, Y: sy + 4*c + 3*s}, tilt, assets.Tiles[45], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx - 4*s + 4*c, Y: sy + 4*c + 4*s}, tilt, assets.Tiles[41], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx - 4*s + 5*c, Y: sy + 4*c + 5*s}, tilt, assets.Tiles[41], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx - 4*s + 6*c, Y: sy + 4*c + 6*s}, tilt, assets.Tiles[45], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx - 4*s + 7*c, Y: sy + 4*c + 7*s}, tilt, assets.Tiles[43], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx - 4*s + 8*c, Y: sy + 4*c + 8*s}, tilt, assets.Tiles[41], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx - 4*s + 8*c, Y: sy + 4*c + 8*s}, tilt, assets.Tiles[437], util.NoCollider), // glass door
+
+		// kitchen area
+		util.NewGameObject(&util.Point{X: sx - s + c, Y: sy + c + s}, tilt+math.Pi, assets.Tiles[323], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx - s + 2*c, Y: sy + c + 2*s}, tilt+math.Pi, assets.Tiles[322], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx - s + 3*c, Y: sy + c + 3*s}, tilt+math.Pi, assets.Tiles[320], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx - s + 3*c, Y: sy + c + 3*s}, tilt+math.Pi, assets.Tiles[267], util.NoCollider),
+
+		// right middle corner
+		util.NewGameObject(&util.Point{X: sx + 7*c - s, Y: sy + 7*s + c}, tilt, assets.Tiles[141], util.RectCollider),
+		util.NewGameObject(&util.Point{X: sx + 8*c - s, Y: sy + 8*s + c}, tilt, assets.Tiles[136], util.RectCollider),
+		util.NewGameObject(&util.Point{X: sx + 8*c, Y: sy + 8*s}, tilt, assets.Tiles[140], util.RectCollider),
+
+		// upper right corner
+		util.NewGameObject(&util.Point{X: sx + 4*c + 3*s, Y: sy + 4*s - 3*c}, tilt, assets.Tiles[141], util.RectCollider),
+		util.NewGameObject(&util.Point{X: sx + 5*c + 3*s, Y: sy + 5*s - 3*c}, tilt, assets.Tiles[110], util.RectCollider),
+		util.NewGameObject(&util.Point{X: sx + 6*c + 3*s, Y: sy + 6*s - 3*c}, tilt, assets.Tiles[110], util.RectCollider),
+		util.NewGameObject(&util.Point{X: sx + 7*c + 3*s, Y: sy + 7*s - 3*c}, tilt, assets.Tiles[110], util.RectCollider),
+		util.NewGameObject(&util.Point{X: sx + 8*c + 3*s, Y: sy + 8*s - 3*c}, tilt, assets.Tiles[109], util.RectCollider),
+		util.NewGameObject(&util.Point{X: sx + 8*c + 2*s, Y: sy + 8*s - 2*c}, tilt, assets.Tiles[114], util.RectCollider),
+
+		// wooden doors
+		util.NewGameObject(&util.Point{X: sx + 6*c - s, Y: sy + 6*s + c}, tilt, assets.Tiles[467], util.NoCollider),
+		util.NewGameObject(&util.Point{X: sx + 8*c + s, Y: sy + 8*s - c}, tilt, assets.Tiles[440], util.NoCollider),
+
+		// pillars
+		{
+			Center:   &util.Point{X: sx + 4*c - 3*s, Y: sy + 4*s + 3*c},
+			Rotation: tilt,
+			Sprite:   assets.Tiles[170],
+			Collider: util.NewRect(&util.Point{X: sx + 4*c - 3*s, Y: sy + 4*s + 3*c}, 48, 48, tilt),
+		},
+		util.NewGameObject(&util.Point{X: sx + 8*c - 3*s, Y: sy + 8*s + 3*c}, tilt, assets.Tiles[195], util.RectCollider),
+
+		// bottom block
+		util.NewGameObject(&util.Point{X: sx - 4*s, Y: sy + 4*c}, tilt, assets.Tiles[140], util.RectCollider),
+		util.NewGameObject(&util.Point{X: sx - 5*s, Y: sy + 5*c}, tilt, assets.Tiles[135], util.RectCollider),
+		util.NewGameObject(&util.Point{X: sx - 5*s + c, Y: sy + 5*c + s}, tilt, assets.Tiles[110], util.RectCollider),
+		util.NewGameObject(&util.Point{X: sx - 5*s + 2*c, Y: sy + 5*c + 2*s}, tilt, assets.Tiles[110], util.RectCollider),
+		util.NewGameObject(&util.Point{X: sx - 5*s + 3*c, Y: sy + 5*c + 3*s}, tilt, assets.Tiles[110], util.RectCollider),
+		util.NewGameObject(&util.Point{X: sx - 5*s + 4*c, Y: sy + 5*c + 4*s}, tilt, assets.Tiles[110], util.RectCollider),
+		util.NewGameObject(&util.Point{X: sx - 5*s + 5*c, Y: sy + 5*c + 5*s}, tilt, assets.Tiles[110], util.RectCollider),
+		util.NewGameObject(&util.Point{X: sx - 5*s + 6*c, Y: sy + 5*c + 6*s}, tilt, assets.Tiles[110], util.RectCollider),
+		util.NewGameObject(&util.Point{X: sx - 5*s + 7*c, Y: sy + 5*c + 7*s}, tilt, assets.Tiles[110], util.RectCollider),
+		util.NewGameObject(&util.Point{X: sx - 5*s + 8*c, Y: sy + 5*c + 8*s}, tilt, assets.Tiles[113], util.RectCollider),
+
+		// other objects without colliders
+		util.NewGameObject(&util.Point{X: sx + 7*c + 4*s, Y: sy + 5*s - 2*c}, tilt+10.0*math.Pi/180.0, assets.Tiles[129], util.NoCollider),
+
+		// other objects with colliders
 	}
 
 	return &Background{
@@ -85,20 +207,17 @@ func (b *Background) Draw(screen *ebiten.Image, offsetX, offsetY float64, debugM
 		}
 	}
 
-	// objects that are subject to collision
 	for _, obj := range b.Objects {
 		op := obj.CenterAndRotateImage()
 		screen.DrawImage(obj.Sprite, op)
 
-		if debugMode {
-			switch obj.GetColliderType() {
-			case util.RectCollider:
-				obj.DrawDebugRect(screen, float32(w), float32(h), "")
-			case util.CircleCollider:
-				obj.DrawDebugCircle(screen, 32, "tree")
-			default:
-				log.Fatal("wtf bro")
-			}
-		}
+		// if debugMode {
+		// 	switch c := obj.Collider.(type) {
+		// 	case util.Rect:
+		// 		obj.DrawDebugRect(screen, float32(c.DimX), float32(c.DimY), "")
+		// 	case util.Circle:
+		// 		obj.DrawDebugCircle(screen, float32(c.Radius), "tree")
+		// 	}
+		// }
 	}
 }

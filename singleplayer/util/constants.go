@@ -5,15 +5,10 @@ import (
 	"time"
 )
 
-// Websocket settings
-const (
-	ClientUpdateBufferSize = 16
-)
-
 // Game settings
 const (
-	ScreenWidth         = 1200
-	ScreenHeight        = 800
+	ScreenWidth         = 800
+	ScreenHeight        = 600
 	ServerPhysicsPeriod = 15 * time.Millisecond
 	ServerUpdatePeriod  = 45 * time.Millisecond
 )
@@ -30,11 +25,11 @@ const (
 	InitialPlayerHealth   = 5
 	InitialPlayerAmmo     = 10
 	InitialPlayerX        = ScreenWidth / 2
-	InitialPlayerY        = ScreenHeight / 2
+	InitialPlayerY        = ScreenHeight/2 + 50
 	InitialPlayerRotation = -FacingOffset
 )
 
-// All the different sprites
+// All the different states a humanoid can be in
 type HumanoidState int
 
 const (
