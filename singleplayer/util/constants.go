@@ -51,3 +51,9 @@ const (
 const (
 	BulletSpeedPerSecond = 350.0
 )
+
+// Zombie spawner settings
+const (
+	ZombieMaxSpeedPerSecond = 300
+	ZombieMinSpeedPerSecond = 100
+)

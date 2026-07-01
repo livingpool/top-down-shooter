@@ -6,6 +6,8 @@ import (
 	"github.com/livingpool/top-down-shooter/singleplayer/util"
 )
 
+// TODO: locality? only resolve collision for objects near player / zombie, rather than iterating thru all of them
+
 func (g *Game) ResolveCollisions() {
 	var maxPenVect util.Vector // resolve deepest collision (max penetration vector)
 	var maxLen float64

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -11,6 +12,7 @@ import (
 	"github.com/livingpool/top-down-shooter/singleplayer/pkg/background"
 	"github.com/livingpool/top-down-shooter/singleplayer/pkg/bullet"
 	"github.com/livingpool/top-down-shooter/singleplayer/pkg/player"
+	"github.com/livingpool/top-down-shooter/singleplayer/pkg/spawner"
 	"github.com/livingpool/top-down-shooter/singleplayer/util"
 )
 
@@ -19,8 +21,9 @@ type Game struct {
 	DebugMode  bool
 	Background *background.Background
 	Player     *player.Player
-	Camera     *util.Camera // camera follows the player
+	Camera     *util.Camera // camera follows the player's movements, but centered at {0, 0} initially
 	Bullets    map[uuid.UUID]*bullet.Bullet
+	Spawner    *spawner.ZombieSpawner
 }
 
 func NewGame(debugMode bool) *Game {
@@ -41,6 +44,7 @@ func NewGame(debugMode bool) *Game {
 		Player:     player.NewPlayer("You", camera),
 		Camera:     camera,
 		Bullets:    make(map[uuid.UUID]*bullet.Bullet),
+		Spawner:    spawner.NewZombieSpawner(5*time.Second, 3),
 	}
 }
 
@@ -52,6 +56,8 @@ func (g *Game) Update() error {
 	if newBullet != nil {
 		g.Bullets[uuid.New()] = newBullet
 	}
+
+	g.Spawner.Update(g.Player.Object.Center)
 
 	g.ResolveCollisions()
 
@@ -66,6 +72,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	for _, b := range g.Bullets {
 		b.Draw(screen, g.DebugMode)
 	}
+
+	g.Spawner.Draw(screen)
 
 	if g.DebugMode {
 		ebitenutil.DebugPrint(screen, fmt.Sprintf("TPS: %0.2f", ebiten.ActualTPS()))

@@ -1,5 +1,11 @@
+## singleplayer mode
+- set up boundary of the game, so that the player cant just wander indefinitely
+
+
+## multiplayer mode
 1. make a single client to single server model
 
+2.
 * server websocket
 * server handles client updates (keystrokes); updates physics (not using RunGame? bc we dont need ui)
 * so if we dont use RunGame, we need a separate timer for updating the server physics
